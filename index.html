@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title>No framwork</title>
+  <style>
+    body {
+      font-size: 12px;
+      font-family: sans-serif;
+      color: #333;
+      line-height: 14px;
+    }
+
+  </style>
+</head>
+<body>
+
+<h1>No-framework</h1>
+<p>Adopting a framework means programming against a set of abstractions not designed for your application, but for some vague "common use case".
+Using those abstractions does not require understanding its implementation details.
+That can be a good thing. On the other hand, it robs developers of potential learning experiences.</p>
+
+<p>This project lists a set of common patterns and features found in JS applications, and re-implements them in plain JS.
+Partially as a learning experience for the author, partially as a demonstration that frameworks shouldn't be treated
+as black boxes of dark magic. This stuff isn't rocket science.</p>
+
+<h2>Templating</h2>
+<h3>Motivation</h3>
+<ul>
+  <li>We want to render things multiple times without writing the html by hand</li>
+  <li>We want to render dynamic data, not known before runtime</li>
+  <li>We want to write our html as html, not using Javascript's DOM manipulation API</li>
+  <li>We want to decouple our html from our javascript and need a way to bind them back together when needed</li>
+</ul>
+<h3>Uage scenario</h3>
+<ul>
+  <li>Write snippets of html with placeholders for dynamic data</li>
+  <li>Call a method bound to a specific snippet of html, passing in the data you want rendered</li>
+  <li>You get back a string of html, placeholders replaced with data, which you can insert into the DOm</li>
+</ul>
+<h3>Implementation</h3>
+<ul>
+  <li>function that accepts template string returns new function which accepts data</li>
+  <li>second function has reference to template string</li>
+  <li>calling second function with data object literal iterates over each property - value pair</li>
+  <li>on each iteration, searches templatestring for a placeholder with the name of the property and replaces it with value</li>
+  <li>when done, returns templatestring with placeholders replaced with actual values</li>
+</ul>
+
+</body>
+</html>
