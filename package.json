@@ -1,0 +1,22 @@
+{
+  "name": "no-framework",
+  "version": "0.0.1",
+  "description": "A vanilla implementation of typical JS framework features.",
+  "main": "index.js",
+  "scripts": {
+    "test": "./node_modules/.bin/mocha 'src/**/*_test.js'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/timkg/no-framework.git"
+  },
+  "author": "tim.theodor@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/timkg/no-framework/issues"
+  },
+  "homepage": "https://github.com/timkg/no-framework",
+  "devDependencies": {
+    "mocha": "^2.0.1"
+  }
+}
