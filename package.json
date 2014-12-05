@@ -18,5 +18,8 @@
   "homepage": "https://github.com/timkg/no-framework",
   "devDependencies": {
     "mocha": "^2.0.1"
+  },
+  "dependencies": {
+    "extend": "^2.0.0"
   }
 }
