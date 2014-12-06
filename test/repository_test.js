@@ -1,5 +1,5 @@
-var createRepo = require('./repository');
-var createMemoryStore = require('./memoryStore');
+var createRepo = require('./../src/repository/repository');
+var createMemoryStore = require('./../src/repository/memoryStore');
 var assert = require('assert');
 
 var POSTS = 'Posts';

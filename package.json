@@ -4,7 +4,7 @@
   "description": "A vanilla implementation of typical JS framework features.",
   "main": "index.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha 'src/**/*_test.js'",
+    "test": "mocha 'test/**/*_test.js'",
     "build": "browserify -r ./src/nf.js:nf > no-framework.js"
   },
   "repository": {
