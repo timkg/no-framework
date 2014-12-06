@@ -1,4 +1,4 @@
-var EventEmitter = require('events').EventEmitter;
+var observe = require('../observable/observe');
 var makeTemplate = require('../templating/templating');
 var extend = require('extend');
 
@@ -13,8 +13,8 @@ module.exports = function (data) {
     }
   };
 
-  v.model.on('change', v.render);
+  observe(v.model, 'set', v.render);
   v.render();
 
-  return extend(v, EventEmitter.prototype);
+  return v;
 };
