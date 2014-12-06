@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+<div>
+  <form action="" method="post" id="form">
+    <textarea name="" id="" cols="30" rows="3"></textarea>
+    <input type="submit"/>
+  </form>
+  <ul id="list">
+
+  </ul>
+  <script type="text/javascript">
+    var form = document.querySelector('#form');
+    var list = document.querySelector('#list');
+
+    form.addEventListener('submit', function (event) {
+      var listItem = document.createElement('li');
+      listItem.textContent = event.currentTarget[0].value;
+      list.insertBefore(listItem, list.firstChild);
+      event.currentTarget[0].value = '';
+      event.preventDefault();
+      event.stopPropagation();
+    }, false);
+  </script>
+</div>
+</body>
+</html>
