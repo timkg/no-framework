@@ -1,4 +1,4 @@
-var makeTemplate = require('./templating');
+var makeTemplate = require('./../src/templating/templating');
 var assert = require('assert');
 
 describe('templating', function () {

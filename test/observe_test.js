@@ -1,4 +1,4 @@
-var observe = require('./observe');
+var observe = require('./../src/observable/observe');
 var assert = require('assert');
 
 describe('observe', function () {
