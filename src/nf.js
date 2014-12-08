@@ -1,8 +1,16 @@
 module.exports = {
-  model: require('./model-view/createModel'),
-  view: require('./model-view/createView'),
+  // constructors
+  Model: require('./model/model'),
+  Collection: require('./model/collection'),
+  View: require('./view/view'),
+  CollectionView: require('./view/collectionView'),
   template: require('./templating/templating'),
   observe: require('./observable/observe'),
-  memoryStore: require('./repository/memoryStore'),
-  repository: require('./repository/repository')
+  queue: require('./queue/queue'),
+  // instances
+  createRepository: require('./repository/repository'),
+  stores: {
+    memory: require('./repository/memoryStore'),
+    localStorage: require('./repository/localStorageStore')
+  }
 };

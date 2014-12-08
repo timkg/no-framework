@@ -1,21 +1,34 @@
-function createRepo () {
-  var Repo = {
-    repositories: {},
-    register: function (type, repo) {
-      this.repositories[type] = repo;
+function createRepo (storesMap) {
+  var modelConstructorMap = {};
+  var modelStoreMap = {};
+  var repo = {
+    register: function (type, constructorFn, saveIn) {
+      modelConstructorMap[type] = constructorFn;
+      modelStoreMap[type] = storesMap[saveIn];
     },
-    save: function (type, model) {
-      return this.repositories[type].save(model);
+    save: function (model) {
+      return modelStoreMap[model.type].save(model);
     },
-    find: function (type, id) {
-      return this.repositories[type].find(id);
+    find: function (modelName, id) {
+      var Model = modelConstructorMap[modelName];
+      var modelStore = modelStoreMap[modelName];
+
+      var modelAttributes = modelStore.find(modelName, id);
+      return new Model(modelAttributes);
     },
-    findAll: function (type) {
-      return this.repositories[type].findAll();
+    findAll: function (modelName) {
+      var Model = modelConstructorMap[modelName];
+      var modelStore = modelStoreMap[modelName];
+
+      return modelStore
+        .findAll(modelName)
+        .map(function (modelData) {
+          return new Model(modelData.attributes, modelData.id);
+        });
     }
   };
 
-  return Repo;
+  return repo;
 }
 
 module.exports = createRepo;

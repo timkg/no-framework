@@ -1,5 +1,5 @@
-var createModel = require('./../src/model-view/createModel');
-var createView = require('./../src/model-view/createView');
+var createModel = require('./../src/model/createModel');
+var createView = require('./../src/view/createView');
 var assert = require('assert');
 var util = require('util');
 

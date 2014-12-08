@@ -1,19 +1,23 @@
-var observe = require('../observable/observe');
 var makeTemplate = require('../templating/templating');
-var extend = require('extend');
 
 module.exports = function (data) {
   var v = {
     templateString: data.template,
-    model: data.model,
+    collection: data.collection,
+    container: data.container,
     render: function () {
       v.template = v.template || makeTemplate(v.templateString);
-      v.html = v.template(v.model.attributes);
+      v.html = v.collection.models
+        .map(function (model) {
+          return v.template(model.attributes);
+        })
+        .join('');
+      v.container.innerHTML = v.html;
       return v.html;
     }
   };
 
-  observe(v.model, 'set', v.render);
+  v.collection.on('add', v.render);
   v.render();
 
   return v;

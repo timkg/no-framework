@@ -13,22 +13,50 @@
   <ul id="list">
 
   </ul>
-  <script type="text/javascript">
+  <script src="../build/no-framework.js"></script>
+  <script>
     var form = document.querySelector('#form');
     var list = document.querySelector('#list');
 
     form.addEventListener('submit', function (event) {
-      var listItem = document.createElement('li');
-      listItem.textContent = event.currentTarget[0].value;
-      list.insertBefore(listItem, list.firstChild);
-      event.currentTarget[0].value = '';
       event.preventDefault();
       event.stopPropagation();
+      var s = Snippet({text: event.currentTarget[0].value});
+      snippetFeedCollection.add(s);
+      event.currentTarget[0].value = '';
     }, false);
-  </script>
-  <script src="../build/no-framework.js"></script>
-  <script>
+
     var nf = require('nf');
+
+    var repo = nf.createRepository({
+      localStorage: nf.stores.localStorage()
+    });
+
+    var Snippet = nf.Model('Snippet', 'localStorage', repo);
+
+    var snippetFeedCollection = nf.Collection({
+      init: function (resolve, reject) {
+        var models = repo.findAll('Snippet');
+        models.forEach(function (model) {
+          this.add(model);
+        }, this);
+        resolve();
+      },
+      insert: function (models, model) {
+        models.unshift(model);
+      }
+    });
+
+    snippetFeedCollection.on('add', function (snippetModel) {
+      repo.save('Snippet', snippetModel);
+    });
+
+    var snippetFeedView = nf.CollectionView({
+      template: '<li>{{text}}</li>',
+      collection: snippetFeedCollection,
+      container: list
+    });
+
   </script>
 </div>
 </body>
