@@ -8,7 +8,7 @@ module.exports = function (opts) {
     models.push(model);
   };
 
-  var init = opts.init;
+  var init = opts.init || function (resolve, reject) { resolve(); };
 
   var queue = createQueue();
 

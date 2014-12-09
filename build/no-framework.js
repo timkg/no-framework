@@ -92,7 +92,7 @@ module.exports = function (opts) {
     models.push(model);
   };
 
-  var init = opts.init;
+  var init = opts.init || function (resolve, reject) { resolve(); };
 
   var queue = createQueue();
 
@@ -118,14 +118,20 @@ module.exports = function (opts) {
 var extend = require('extend');
 
 function createModelDefinition (name, saveIn, repository) {
-  var constructorFn = function (initialAttrs, id) {
+  var constructorFn = function (initialAttrs) {
     var m = {
       attributes: initialAttrs,
       name: name,
-      id: id,
+      relations: {},
       set: function (newAttrs) {
         m.attributes = extend(m.attributes, newAttrs);
+      },
+      addRelation: function (model) {
+        m.relations[model.name] = m.relations[model.name] || [];
+        m.relations[model.name].push(model);
+        repository.save(m); // TODO - support batch operations
       }
+
     };
     return m;
   };
@@ -146,6 +152,7 @@ module.exports = function (obj, methodName, callback) {
     return res;
   }
 };
+
 },{}],5:[function(require,module,exports){
 function createQueue () {
 
@@ -178,21 +185,21 @@ function createQueue () {
 module.exports = createQueue;
 
 },{}],6:[function(require,module,exports){
-function createLocalStorageStore (modelType) {
+function createLocalStorageStore (modelName) {
   var localStorageStore = {
     save: function (model) {
-      var models = JSON.parse(localStorage.getItem(model.type)) || [];
-      if (!model.id) {
+      var models = JSON.parse(localStorage.getItem(model.name)) || [];
+      if (typeof model.attributes.id !== "number") {
         model.attributes.id = models.length;
       }
-      models.push(model);
-      localStorage.setItem(model.type, JSON.stringify(models));
+      models[model.attributes.id] = model;
+      localStorage.setItem(model.name, JSON.stringify(models));
       return model;
     },
     find: function (modelName, id) {
       var models = JSON.parse(localStorage.getItem(modelName)) || [];
       return models.filter(function (model) {
-        return model.attributes.id === id || model.id === id;
+        return model.attributes.id === id;
       })[0];
     },
     findAll: function (modelName) {
@@ -234,19 +241,22 @@ function createRepo (storesMap) {
   var modelConstructorMap = {};
   var modelStoreMap = {};
   var repo = {
-    register: function (type, constructorFn, saveIn) {
-      modelConstructorMap[type] = constructorFn;
-      modelStoreMap[type] = storesMap[saveIn];
+    register: function (modelName, constructorFn, saveIn) {
+      modelConstructorMap[modelName] = constructorFn;
+      modelStoreMap[modelName] = storesMap[saveIn];
     },
     save: function (model) {
-      return modelStoreMap[model.type].save(model);
+      return modelStoreMap[model.name].save(model);
     },
     find: function (modelName, id) {
       var Model = modelConstructorMap[modelName];
       var modelStore = modelStoreMap[modelName];
 
-      var modelAttributes = modelStore.find(modelName, id);
-      return new Model(modelAttributes);
+      var modelJson = modelStore.find(modelName, id);
+      var m = new Model(modelJson.attributes, modelJson.id);
+      repo.getRelations(m, modelJson);
+
+      return m;
     },
     findAll: function (modelName) {
       var Model = modelConstructorMap[modelName];
@@ -255,8 +265,22 @@ function createRepo (storesMap) {
       return modelStore
         .findAll(modelName)
         .map(function (modelData) {
-          return new Model(modelData.attributes, modelData.id);
+          var m = new Model(modelData.attributes, modelData.attributes.id);
+          repo.getRelations(m, modelData);
+          return m;
         });
+    },
+    getRelations: function (model, modelData) {
+      if (modelData.relations) {
+        for (var modelName in modelData.relations) {
+          modelData.relations[modelName].forEach(function (modelJson) {
+            var relative = repo.find(modelName, modelJson.attributes.id);
+            model.addRelation(relative);
+          })
+        }
+      }
+
+      return model;
     }
   };
 
