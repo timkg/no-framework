@@ -1,32 +1,32 @@
 function createRepo (storesMap) {
-  var modelConstructorMap = {};
-  var modelStoreMap = {};
   var repo = {
+    modelConstructorMap: {},
+    modelStoreMap: {},
     register: function (modelName, constructorFn, saveIn) {
-      modelConstructorMap[modelName] = constructorFn;
-      modelStoreMap[modelName] = storesMap[saveIn];
+      repo.modelConstructorMap[modelName] = constructorFn;
+      repo.modelStoreMap[modelName] = storesMap[saveIn];
     },
-    save: function (model) {
-      return modelStoreMap[model.name].save(model);
+    save: function (modelName, model) {
+      return repo.modelStoreMap[modelName].save(modelName, model);
     },
     find: function (modelName, id) {
-      var Model = modelConstructorMap[modelName];
-      var modelStore = modelStoreMap[modelName];
+      var Model = repo.modelConstructorMap[modelName];
+      var modelStore = repo.modelStoreMap[modelName];
 
       var modelJson = modelStore.find(modelName, id);
-      var m = new Model(modelJson.attributes, modelJson.id);
+      var m = new Model(modelJson);
       repo.getRelations(m, modelJson);
 
       return m;
     },
     findAll: function (modelName) {
-      var Model = modelConstructorMap[modelName];
-      var modelStore = modelStoreMap[modelName];
+      var Model = repo.modelConstructorMap[modelName];
+      var modelStore = repo.modelStoreMap[modelName];
 
       return modelStore
         .findAll(modelName)
         .map(function (modelData) {
-          var m = new Model(modelData.attributes, modelData.attributes.id);
+          var m = new Model(modelData);
           repo.getRelations(m, modelData);
           return m;
         });
@@ -42,6 +42,10 @@ function createRepo (storesMap) {
       }
 
       return model;
+    },
+    delete: function (modelName, modelId) {
+      var modelStore = repo.modelStoreMap[modelName];
+      return modelStore.delete(modelName, modelId);
     }
   };
 

@@ -17,6 +17,11 @@ function createLocalStorageStore (modelName) {
     },
     findAll: function (modelName) {
       return JSON.parse(localStorage.getItem(modelName)) || [];
+    },
+    delete: function (modelName, id) {
+      var models = JSON.parse(localStorage.getItem(model.name)) || [];
+      delete models[id];
+      localStorage.setItem(model.name, JSON.stringify(models));
     }
   };
 

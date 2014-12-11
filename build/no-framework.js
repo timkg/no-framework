@@ -318,6 +318,16 @@ module.exports = function (data) {
         })
         .join('');
       v.container.innerHTML = v.html;
+
+      v.container.addEventListener('click', function (event) {
+        switch (event.target.dataset.action) {
+          case 'delete':
+            var modelId = event.target.dataset.modelId;
+            debugger
+            break;
+        }
+      });
+
       return v.html;
     }
   };

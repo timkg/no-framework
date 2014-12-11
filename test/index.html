@@ -25,20 +25,32 @@
       margin: 10px 0;
     }
 
+    a {
+      display: block;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
     .col1 {
       width: 100%;
+      overflow: hidden;
     }
 
     .col2 {
       width: 50%;
       float: left;
       padding: 10px;
+      overflow: hidden;
     }
 
     .col3 {
       width: 33%;
       float: left;
       padding: 10px;
+      overflow: hidden;
     }
 
   </style>
@@ -155,7 +167,7 @@
         activeSource.addRelation(noteModel);
       });
       var noteListView = nf.CollectionView({
-        template: '<li>{{text}}</li>',
+        template: '<li>{{text}} <button data-action="delete" data-model-id="{{id}}">delete</button></li>',
         collection: noteFeedCollection,
         container: notesList
       });

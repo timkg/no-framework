@@ -1,18 +1,27 @@
 function createMemoryStore () {
   var memoryStore = {
-    models: [],
-    save: function (model) {
-      if (!model.id) {
-        model.id = memoryStore.models.length;
-      }
-      memoryStore.models.push(model);
+    models: {},
+    save: function (modelName, model) {
+      memoryStore.models[modelName] = memoryStore.models[modelName] || [];
+      model.id = memoryStore.models[modelName].length;
+      memoryStore.models[modelName].push(model);
       return model;
     },
-    find: function (id) {
-      return memoryStore.models[id];
+    find: function (modelName, id) {
+      memoryStore.models[modelName] = memoryStore.models[modelName] || [];
+      return memoryStore.models[modelName][id];
     },
-    findAll: function () {
-      return memoryStore.models
+    findAll: function (modelName) {
+      memoryStore.models[modelName] = memoryStore.models[modelName] || [];
+      return memoryStore.models[modelName];
+    },
+    delete: function (modelName, id) {
+      memoryStore.models[modelName] = memoryStore.models[modelName] || [];
+      memoryStore.models[modelName][id] = null;
+    },
+    deleteAll: function (modelName) {
+      if (!modelName) { return; }
+      memoryStore.models[modelName] = [];
     }
   };
 

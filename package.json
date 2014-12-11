@@ -22,6 +22,8 @@
     "mocha": "^2.0.1"
   },
   "dependencies": {
-    "extend": "^2.0.0"
+    "es6-promise": "^2.0.1",
+    "extend": "^2.0.0",
+    "persistence": "^1.0.0"
   }
 }
