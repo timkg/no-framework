@@ -1,7 +1,7 @@
-var makeTemplate = require('./../src/templating/templating');
+var makeTemplate = require('./../src/view/template');
 var assert = require('assert');
 
-describe('templating', function () {
+describe('template', function () {
   it('replaces curly braces with data', function () {
     var templateString = '<div><h1>{{header}}</h1><p>{{text}}</p></div>';
     var render = makeTemplate(templateString);

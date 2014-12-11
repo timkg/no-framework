@@ -30,27 +30,6 @@ describe('repository', function () {
     memoryStore.deleteAll('Post');
   });
 
-  it('sets an id upon saving an item, starting at 0', function () {
-    var post = new Post();
-    repository.save('Post', post);
-
-    assert(post.id === 0);
-    memoryStore.deleteAll('Post');
-  });
-
-  it('increases item id by 1 for each saved item', function () {
-    var post1 = new Post();
-    var post2 = new Post();
-    var post3 = new Post();
-    repository.save('Post', post1);
-    repository.save('Post', post2);
-    repository.save('Post', post3);
-
-    assert(post1.id === 0);
-    assert(post3.id === 2);
-    memoryStore.deleteAll('Post');
-  });
-
   it('retrieves items by id', function () {
     var post = new Post();
     repository.save('Post', post);

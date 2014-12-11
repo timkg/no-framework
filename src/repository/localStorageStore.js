@@ -1,27 +1,35 @@
-function createLocalStorageStore (modelName) {
+function get (modelName) {
+  return JSON.parse(localStorage.get(modelName)) || [];
+}
+
+function set (modelName, models) {
+  localStorage.set(modelName, JSON.stringify(models));
+}
+
+function createLocalStorageStore () {
   var localStorageStore = {
-    save: function (model) {
-      var models = JSON.parse(localStorage.getItem(model.name)) || [];
-      if (typeof model.attributes.id !== "number") {
-        model.attributes.id = models.length;
-      }
-      models[model.attributes.id] = model;
-      localStorage.setItem(model.name, JSON.stringify(models));
+    save: function (modelName, model) {
+      var models = get(modelName);
+      model.id = models.length;
+      models.push(model);
+      set(modelName, models);
       return model;
     },
     find: function (modelName, id) {
-      var models = JSON.parse(localStorage.getItem(modelName)) || [];
-      return models.filter(function (model) {
-        return model.attributes.id === id;
-      })[0];
+      var models = get(modelName);
+      return models[id];
     },
     findAll: function (modelName) {
-      return JSON.parse(localStorage.getItem(modelName)) || [];
+      var models = get(modelName);
+      return models.filter(function (m) { return m; });
     },
     delete: function (modelName, id) {
-      var models = JSON.parse(localStorage.getItem(model.name)) || [];
-      delete models[id];
-      localStorage.setItem(model.name, JSON.stringify(models));
+      var models = get(modelName);
+      models[id] = null;
+    },
+    deleteAll: function (modelName) {
+      if (!modelName) { return; }
+      set(modelName, []);
     }
   };
 

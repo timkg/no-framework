@@ -4,12 +4,14 @@ var assert = require('assert');
 
 describe('observe', function () {
 
-  describe('EventEmitter constructor', function () {
-    it('returns a new eventEmitter', function () {
-      var ee = new EventEmitter();
-      assert(ee.on);
-      assert(ee.off);
-      assert(ee.emit);
+  describe('EventEmitter', function () {
+    describe('EventEmitter constructor', function () {
+      it('returns a new eventEmitter', function () {
+        var ee = new EventEmitter();
+        assert(ee.on);
+        assert(ee.off);
+        assert(ee.emit);
+      });
     });
 
     describe('eventEmitter instance', function () {

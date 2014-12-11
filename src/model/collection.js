@@ -1,31 +1,47 @@
 var extend = require('extend');
-var model = require('./model');
-var createQueue = require('../queue/queue');
-var observe = require('../observable/observe');
+var EventEmitter = require('../observable/eventEmitter');
 
-module.exports = function (opts) {
-  var insert = opts.insert || function (models, model) {
-    models.push(model);
-  };
+function defineCollection (Model) {
 
-  var init = opts.init || function (resolve, reject) { resolve(); };
-
-  var queue = createQueue();
-
-  var c = {
-    models: [],
+  var CollectionPrototype = {
     add: function (model) {
-      insert(c.models, model);
-      return model;
+      if (typeof model.id !== 'undefined' && typeof model.attributes !== 'undefined') {
+        addModel.call(this, model);
+      } else {
+        addModelJson.call(this, model);
+      }
     },
-    on: function (methodName, cb) {
-      queue.add(function (resolve, reject) {
-        observe(c, methodName, cb);
-        resolve();
-      })
+    hasUnsavedModels: function () {
+      var dirtyModels = this.models.filter(function (model) {
+        return model.dirty;
+      });
+
+      return !!dirtyModels.length;
+    },
+    getUnsavedModels: function () {
+      return this.models.filter(function (model) {
+        return model.dirty;
+      });
     }
   };
 
-  queue.add(init.bind(c));
-  return c;
-};
+  var addModelJson = function (json) {
+    var model = new Model({attributes: json});
+    addModel.call(this, model);
+  };
+
+  var addModel = function (model) {
+    this.models.push(model);
+    this.emit('change', model);
+  };
+
+  var Collection = function () {
+    var collection = Object.create(extend(CollectionPrototype, new EventEmitter()));
+    collection.models = [];
+    return collection;
+  };
+
+  return Collection;
+}
+
+module.exports = defineCollection;

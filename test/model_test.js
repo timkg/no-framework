@@ -73,8 +73,54 @@ describe('model', function () {
       assert(memoryStore.models.TestModel[0] === null);
       assert(memoryStore.models.TestModel[1] === model2);
       assert(memoryStore.models.TestModel[2] === model3);
+      memoryStore.deleteAll('TestModel');
+    });
+
+    it('emits change event when attributes are set', function (done) {
+      var model = new Model();
+
+      model.on('change', function () {
+        assert(model.get('testAttr') === 1);
+        done();
+      });
+
+      model.set({testAttr: 1});
+    });
+
+    it('emits change event with changed attributes when attributes are set', function (done) {
+      var model = new Model();
+      var changes = {testAttr: 2};
+
+      model.on('change', function (newAttrs) {
+        assert(newAttrs === changes);
+        done();
+      });
+
+      model.set(changes);
+    });
+
+    it('sets a dirty flag when attributes change', function () {
+      var model = new Model();
+      model.set({testAttr: 1});
+
+      assert(model.dirty);
+    });
+
+    it('removes dirty flag when model is saved', function () {
+      var model = new Model();
+      model.set({testAttr: 1});
+      model.save();
+      assert(!model.dirty);
+    });
+
+    it('starts out with a dirty flag when created with attributes', function () {
+      var model = new Model({attributes: {test: true}});
+      assert(model.dirty);
+    });
+
+    it('does not start with a dirty flag when created without attributes', function () {
+      var model = new Model();
+      assert(!model.dirty);
     });
   });
 });
-
-

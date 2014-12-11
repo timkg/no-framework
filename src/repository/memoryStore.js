@@ -13,7 +13,7 @@ function createMemoryStore () {
     },
     findAll: function (modelName) {
       memoryStore.models[modelName] = memoryStore.models[modelName] || [];
-      return memoryStore.models[modelName];
+      return memoryStore.models[modelName].filter(function (m) { return m; });
     },
     delete: function (modelName, id) {
       memoryStore.models[modelName] = memoryStore.models[modelName] || [];

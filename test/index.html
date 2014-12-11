@@ -79,101 +79,48 @@
   <script>
     var nf = require('nf');
 
-    var repo = nf.createRepository({
-      localStorage: nf.stores.localStorage()
+    // TODO - abstract and hide this somehow
+    var repo = nf.Repository({
+      localStorage: nf.LocalStorageStore()
     });
-
-    var Note = nf.Model('Note', 'localStorage', repo);
-    var Source = nf.Model('Source', 'localStorage', repo);
-
-    var activeSource;
-    var activeNotesFeedCollection;
+    var Note = nf.Model('Note', repo, 'localStorage');
+    var Source = nf.Model('Source', repo, 'localStorage');
+    var NoteCollection = nf.Collection(Note);
+    var SourceCollection = nf.Collection(Source);
 
     var notesForm = document.querySelector('#form-add-note');
     var notesList = document.querySelector('#list-note');
-
     notesForm.addEventListener('submit', function (event) {
       event.preventDefault();
       event.stopPropagation();
-      var n = Note({text: event.currentTarget[0].value});
-      activeNotesFeedCollection.add(n);
+      newNoteCreated(event.currentTarget[0].value);
       event.currentTarget[0].value = '';
     }, false);
 
     var sourcesForm = document.querySelector('#form-add-source');
     var sourcesList = document.querySelector('#list-source');
-
     sourcesList.addEventListener('click', function (event) {
       event.preventDefault();
       event.stopPropagation();
       if (event.target.tagName.toLowerCase() === 'a') {
         var id = parseInt(event.target.dataset.id, 10);
-        var source = repo.find('Source', id);
-        onActiveSourceChange(source);
+
       }
     }, true);
-
     sourcesForm.addEventListener('keydown', function (event) {
       if (event.which != 13) {
         return;
       }
       event.preventDefault();
       event.stopPropagation();
-      var s = Source({text: event.currentTarget[0].value});
-      sourceListCollection.add(s);
+      newSourceCreated(event.currentTarget[0].value);
       event.currentTarget[0].value = '';
     }, false);
 
-    var sourceListCollection = nf.Collection({
-      init: function (resolve, reject) {
-        var models = repo.findAll('Source');
-        models.forEach(function (model) {
-          this.add(model);
-        }, this);
-        onActiveSourceChange(models[0]);
-        resolve();
-      },
-      insert: function (models, model) {
-        models.unshift(model);
-      }
-    });
+    function newNoteCreated (text) {}
+    function newSourceCreated (text) {}
 
-    sourceListCollection.on('add', function (model) {
-      repo.save(model);
-      onActiveSourceChange(model)
-    });
-
-    var sourceListView = nf.CollectionView({
-      template: '<li><a data-id="{{id}}" href="source/{{id}}">{{text}}</a></li>',
-      collection: sourceListCollection,
-      container: sourcesList
-    });
-
-    function onActiveSourceChange (source) {
-      activeSource = source;
-      var noteFeedCollection = nf.Collection({
-        init: function (resolve, reject) {
-          var models = activeSource.relations.Note;
-          if (models) {
-            models.forEach(function (model) {
-              this.add(model);
-            }, this);
-          }
-          resolve();
-        }
-      });
-      noteFeedCollection.on('add', function (noteModel) {
-        repo.save(noteModel);
-        activeSource.addRelation(noteModel);
-      });
-      var noteListView = nf.CollectionView({
-        template: '<li>{{text}} <button data-action="delete" data-model-id="{{id}}">delete</button></li>',
-        collection: noteFeedCollection,
-        container: notesList
-      });
-      activeNotesFeedCollection = noteFeedCollection;
-    }
-
+    var sourceListCollection = new SourceCollection();
   </script>
 </div>
 </body>
