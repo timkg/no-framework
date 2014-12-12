@@ -8,16 +8,19 @@ function defineModel (modelName, repo, saveIn) {
       this.attributes = extend(this.attributes, newAttrs);
       this.dirty = true;
       this.emit('change', newAttrs);
+      return this;
     },
     get: function (attrName) {
       return this.attributes[attrName];
     },
     save: function () {
-      repo.save(modelName, this);
       this.dirty = false;
+      repo.save(modelName, this);
+      return this;
     },
     delete: function () {
       repo.delete(modelName, this.id);
+      return this;
     }
   };
 
@@ -31,6 +34,8 @@ function defineModel (modelName, repo, saveIn) {
     }
     return model;
   };
+
+  Model.prototype = ModelPrototype;
 
   Model.find = function (id) {
     return repo.find(modelName, id);

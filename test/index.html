@@ -77,15 +77,11 @@
 
   <script src="../build/no-framework.js"></script>
   <script>
-    var nf = require('nf');
+    var app = require('nf').app();
 
-    // TODO - abstract and hide this somehow
-    var repo = nf.Repository({
-      localStorage: nf.LocalStorageStore()
-    });
-    var Note = nf.Model('Note', repo, 'localStorage');
-    var NoteCollection = nf.Collection(Note);
-    var NoteView = nf.ModelView({
+    var Note = app.Model('Note');
+    var NoteCollection = app.Collection(Note);
+    var NoteView = app.ModelView({
       container: function () {
         return document.createElement('li');
       },

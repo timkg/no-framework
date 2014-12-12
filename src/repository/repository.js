@@ -1,5 +1,9 @@
+var extend = require('extend');
+var EventEmitter = require('./../observable/eventEmitter');
+var wrap = require('./../observable/wrapMethod');
+
 function createRepo (storesMap) {
-  var repo = {
+  var repo = extend({
     modelConstructorMap: {},
     modelStoreMap: {},
     register: function (modelName, constructorFn, saveIn) {
@@ -15,7 +19,6 @@ function createRepo (storesMap) {
 
       var modelJson = modelStore.find(modelName, id);
       var m = new Model(modelJson);
-      repo.getRelations(m, modelJson);
 
       return m;
     },
@@ -27,27 +30,14 @@ function createRepo (storesMap) {
         .findAll(modelName)
         .map(function (modelData) {
           var m = new Model(modelData);
-          repo.getRelations(m, modelData);
           return m;
         });
-    },
-    getRelations: function (model, modelData) {
-      if (modelData.relations) {
-        for (var modelName in modelData.relations) {
-          modelData.relations[modelName].forEach(function (modelJson) {
-            var relative = repo.find(modelName, modelJson.attributes.id);
-            model.addRelation(relative);
-          })
-        }
-      }
-
-      return model;
     },
     delete: function (modelName, modelId) {
       var modelStore = repo.modelStoreMap[modelName];
       return modelStore.delete(modelName, modelId);
     }
-  };
+  }, new EventEmitter());
 
   return repo;
 }

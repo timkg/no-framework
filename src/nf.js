@@ -11,5 +11,6 @@ module.exports = {
   ModelView: require('./view/modelView'),
   CollectionView: require('./view/collectionView'),
   bindViewToDom: require('./view/bindViewToDom'),
-  wrapMethod: require('./observable/wrapMethod')
+  wrapMethod: require('./observable/wrapMethod'),
+  app: require('./app/app')
 };

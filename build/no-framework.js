@@ -1134,6 +1134,41 @@ module.exports = function extend() {
 
 },{}],4:[function(require,module,exports){
 var extend = require('extend');
+var wrap = require('../observable/wrapMethod');
+
+function app () {
+  var nf = this;
+  var app = Object.create(extend(nf, new nf.EventEmitter()));
+
+  app.repo = nf.Repository({
+    memory: nf.MemoryStore(),
+    localStorage: nf.LocalStorageStore()
+  });
+
+  app.Model = function (modelName, persistence) {
+    persistence = persistence || 'memory';
+    return nf.Model(modelName, app.repo, persistence);
+  };
+
+  wrap(app.repo, 'register', function (modelName, constructorFn, persistence) {
+    wrap(constructorFn.prototype, 'set', function (model) {
+      app.emit('model:changed', model);
+    });
+    wrap(constructorFn.prototype, 'save', function (model) {
+      app.emit('model:saved', model);
+    });
+    wrap(constructorFn.prototype, 'delete', function (model) {
+      app.emit('model:deleted', model);
+    });
+  });
+
+  return app;
+}
+
+module.exports = app;
+
+},{"../observable/wrapMethod":8,"extend":3}],5:[function(require,module,exports){
+var extend = require('extend');
 var EventEmitter = require('../observable/eventEmitter');
 
 function defineCollection (Model) {
@@ -1181,7 +1216,7 @@ function defineCollection (Model) {
 
 module.exports = defineCollection;
 
-},{"../observable/eventEmitter":6,"extend":3}],5:[function(require,module,exports){
+},{"../observable/eventEmitter":7,"extend":3}],6:[function(require,module,exports){
 var extend = require('extend');
 var EventEmitter = require('../observable/eventEmitter');
 
@@ -1192,16 +1227,19 @@ function defineModel (modelName, repo, saveIn) {
       this.attributes = extend(this.attributes, newAttrs);
       this.dirty = true;
       this.emit('change', newAttrs);
+      return this;
     },
     get: function (attrName) {
       return this.attributes[attrName];
     },
     save: function () {
-      repo.save(modelName, this);
       this.dirty = false;
+      repo.save(modelName, this);
+      return this;
     },
     delete: function () {
       repo.delete(modelName, this.id);
+      return this;
     }
   };
 
@@ -1216,6 +1254,8 @@ function defineModel (modelName, repo, saveIn) {
     return model;
   };
 
+  Model.prototype = ModelPrototype;
+
   Model.find = function (id) {
     return repo.find(modelName, id);
   };
@@ -1229,7 +1269,7 @@ function defineModel (modelName, repo, saveIn) {
 
 module.exports = defineModel;
 
-},{"../observable/eventEmitter":6,"extend":3}],6:[function(require,module,exports){
+},{"../observable/eventEmitter":7,"extend":3}],7:[function(require,module,exports){
 var EventEmitter = function () {
   var eventEmitter = {
     listeners: {},
@@ -1256,19 +1296,19 @@ var EventEmitter = function () {
 
 module.exports = EventEmitter;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 function wrapMethod (obj, methodName, callback) {
   var originalMethod = obj[methodName];
   obj[methodName] = function () {
-    var res = originalMethod.apply(obj, arguments);
-    callback(res);
+    var res = originalMethod.apply(this, arguments);
+    callback.apply(this, arguments);
     return res;
   }
 }
 
 module.exports = wrapMethod;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 var Promise = require('es6-promise').Promise;
 var EventEmitter = require('../observable/eventEmitter');
 
@@ -1316,7 +1356,7 @@ function createQueue () {
 
 module.exports = createQueue;
 
-},{"../observable/eventEmitter":6,"es6-promise":2}],9:[function(require,module,exports){
+},{"../observable/eventEmitter":7,"es6-promise":2}],10:[function(require,module,exports){
 function get (modelName) {
   return JSON.parse(window.localStorage.getItem(modelName)) || [];
 }
@@ -1357,7 +1397,7 @@ function createLocalStorageStore () {
 
 module.exports = createLocalStorageStore;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 function createMemoryStore () {
   var memoryStore = {
     models: {},
@@ -1390,9 +1430,13 @@ function createMemoryStore () {
 
 module.exports = createMemoryStore;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
+var extend = require('extend');
+var EventEmitter = require('./../observable/eventEmitter');
+var wrap = require('./../observable/wrapMethod');
+
 function createRepo (storesMap) {
-  var repo = {
+  var repo = extend({
     modelConstructorMap: {},
     modelStoreMap: {},
     register: function (modelName, constructorFn, saveIn) {
@@ -1440,14 +1484,14 @@ function createRepo (storesMap) {
       var modelStore = repo.modelStoreMap[modelName];
       return modelStore.delete(modelName, modelId);
     }
-  };
+  }, new EventEmitter());
 
   return repo;
 }
 
 module.exports = createRepo;
 
-},{}],12:[function(require,module,exports){
+},{"./../observable/eventEmitter":7,"./../observable/wrapMethod":8,"extend":3}],13:[function(require,module,exports){
 var wrap = require('./../observable/wrapMethod');
 
 function bindViewToDom (view, container) {
@@ -1459,9 +1503,9 @@ function bindViewToDom (view, container) {
 
 module.exports = bindViewToDom;
 
-},{"./../observable/wrapMethod":7}],13:[function(require,module,exports){
+},{"./../observable/wrapMethod":8}],14:[function(require,module,exports){
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 var Template = require('./template');
 var StaticView = require('./staticView');
 var bindViewToDom = require('./bindViewToDom');
@@ -1511,15 +1555,13 @@ function createModelView (options) {
 
 module.exports = createModelView;
 
-},{"./bindViewToDom":12,"./staticView":15,"./template":16}],15:[function(require,module,exports){
+},{"./bindViewToDom":13,"./staticView":16,"./template":17}],16:[function(require,module,exports){
 var Template = require('./template');
 
 function createStaticView (templateString) {
   var staticView = {
     state: 'default',
-    templates: {
-      default: new Template(templateString)
-    },
+    templates: new Template(templateString),
     render: function (data) {
       this.html = this.templates(this.state, data);
       return this.html;
@@ -1535,7 +1577,7 @@ function createStaticView (templateString) {
 
 module.exports = createStaticView;
 
-},{"./template":16}],16:[function(require,module,exports){
+},{"./template":17}],17:[function(require,module,exports){
 function createTemplate (templateString) {
   var templates = {};
   if (typeof templateString === 'string') {
@@ -1544,6 +1586,10 @@ function createTemplate (templateString) {
     templates = templateString;
   }
   return function (state, data) {
+    if (!data) {
+      data = state;
+      state = 'default';
+    }
     var html = templates[state];
     for(var prop in data) {
       var regexString = '{{' + prop + '}}';
@@ -1570,7 +1616,8 @@ module.exports = {
   ModelView: require('./view/modelView'),
   CollectionView: require('./view/collectionView'),
   bindViewToDom: require('./view/bindViewToDom'),
-  wrapMethod: require('./observable/wrapMethod')
+  wrapMethod: require('./observable/wrapMethod'),
+  app: require('./app/app')
 };
 
-},{"./model/collection":4,"./model/model":5,"./observable/eventEmitter":6,"./observable/wrapMethod":7,"./queue/queue":8,"./repository/localStorageStore":9,"./repository/memoryStore":10,"./repository/repository":11,"./view/bindViewToDom":12,"./view/collectionView":13,"./view/modelView":14,"./view/staticView":15,"./view/template":16}]},{},[]);
+},{"./app/app":4,"./model/collection":5,"./model/model":6,"./observable/eventEmitter":7,"./observable/wrapMethod":8,"./queue/queue":9,"./repository/localStorageStore":10,"./repository/memoryStore":11,"./repository/repository":12,"./view/bindViewToDom":13,"./view/collectionView":14,"./view/modelView":15,"./view/staticView":16,"./view/template":17}]},{},[]);
