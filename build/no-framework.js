@@ -1464,90 +1464,87 @@ module.exports = bindViewToDom;
 },{}],14:[function(require,module,exports){
 var Template = require('./template');
 var StaticView = require('./staticView');
-var extend = require('extend');
-var wrap = require('./../observable/wrapMethod');
 var bindViewToDom = require('./bindViewToDom');
 
-function createModelView (model, options) {
-  var modelView = Object.create(new StaticView());
-  modelView.model = model;
-
-  model.on('change', function () {
-    modelView.render(modelView.model.attributes);
-  });
+function createModelView (options) {
+  var ModelViewPrototype = Object.create(new StaticView());
 
   if (typeof options === 'string') {
-    modelView.templateString = options;
+    ModelViewPrototype.templates = new Template(options);
+  } else if (typeof options.templates === 'object') {
+    ModelViewPrototype.templates = new Template(options.templates);
   }
 
-  if (options.render) {
-    switch (typeof options.render) {
-      case 'string':
-        modelView.templateString = options.render;
-        break;
-      case 'object':
-        // options.render is a state:templateString map
-        modelView.templateStrings = options.render;
-        modelView.render = function (data) {
-          var render = Template(modelView.templateStrings[modelView.state]);
-          modelView.html = render(data);
-          return modelView.html;
-        };
-        // default start state
-        modelView.state = 'default';
-        // we need to support state transitions
-        modelView.stateTransition = function (newState) {
-          modelView.state = newState;
-          modelView.render(modelView.model.attributes);
-        };
-        break;
-      default:
-        throw new Error('View requires a template string! Received ' + options.render);
+  if (typeof options.container === 'function') {
+    ModelViewPrototype.container = options.container;
+  }
+
+  ModelViewPrototype.initEvents = function () {
+    if (options.events) {
+      var events = Object.keys(options.events);
+      events.forEach(function (event) {
+        var cb = options.events[event];
+        this.container.addEventListener(event, cb.bind(this));
+      }, this);
     }
-  }
+  };
 
-  modelView.render(modelView.model.attributes);
+  var ModelView = function (model, container) {
+    var modelView = Object.create(ModelViewPrototype);
+    modelView.model = model;
+    modelView.container = container || modelView.container();
+    modelView.state = 'default';
+    model.on('change', function () {
+      modelView.render(modelView.model.attributes);
+    });
 
-  if (options.container) {
-    modelView.container = (typeof options.container === 'function' ? options.container() : options.container);
+    modelView.initEvents();
+    modelView.render(modelView.model.attributes);
+
     bindViewToDom(modelView, modelView.container);
-  }
 
-  if (options.events) {
-    var events = Object.keys(options.events);
-    events.forEach(function (event) {
-      var cb = options.events[event];
-      modelView.container.addEventListener(event, cb);
-    })
-  }
+    return modelView;
+  };
 
-  return modelView
+  return ModelView;
 }
 
 module.exports = createModelView;
 
-},{"./../observable/wrapMethod":7,"./bindViewToDom":12,"./staticView":15,"./template":16,"extend":3}],15:[function(require,module,exports){
+},{"./bindViewToDom":12,"./staticView":15,"./template":16}],15:[function(require,module,exports){
 var Template = require('./template');
 
 function createStaticView (templateString) {
   var staticView = {
-    templateString: templateString,
+    state: 'default',
+    templates: {
+      default: new Template(templateString)
+    },
     render: function (data) {
-      this.template = this.template || new Template(this.templateString);
-      this.html = this.template(data);
+      this.html = this.templates(this.state, data);
       return this.html;
+    },
+    stateTransition: function (newState) {
+      this.state = newState;
+      this.render(this.model.attributes);
     }
   };
 
   return staticView;
 }
 
-
 module.exports = createStaticView;
+
 },{"./template":16}],16:[function(require,module,exports){
 function createTemplate (templateString) {
-  return function (data) {
-    var html = templateString;
+  var templates = {};
+  if (typeof templateString === 'string') {
+    templates.default = templateString;
+  } else if (typeof templates === 'object') {
+    templates = templateString;
+  }
+  return function (state, data) {
+    var html = templates[state];
     for(var prop in data) {
       var regexString = '{{' + prop + '}}';
       html = html.replace(new RegExp(regexString, 'ig'), data[prop]);

@@ -85,6 +85,30 @@
     });
     var Note = nf.Model('Note', repo, 'localStorage');
     var NoteCollection = nf.Collection(Note);
+    var NoteView = nf.ModelView({
+      container: function () {
+        return document.createElement('li');
+      },
+      templates: {
+        default: '{{text}}',
+        edit: '<input type="text" data-bind="text" value="{{text}}" />'
+      },
+      events: {
+        click: function (event) {
+          if (this.state === 'default') {
+            this.stateTransition('edit');
+          }
+        },
+        keydown: function (event) {
+          if (this.state === 'edit') {
+            if (event.which != 13) { return; }
+            var value = this.container.querySelector('[data-bind]').value;
+            this.model.set({text: value});
+            this.stateTransition('default');
+          }
+        }
+      }
+    });
 
     var notesList = document.querySelector('#list-note');
     var notesForm = document.querySelector('#form-add-note');
@@ -100,30 +124,7 @@
       var note = new Note({attributes: {text: text}});
       note.save();
 
-      var noteView = new nf.ModelView(note, {
-        container: function () {
-          return document.createElement('li');
-        },
-        render: {
-          default: '{{text}}',
-          edit: '<input type="text" data-bind="text" value="{{text}}" />'
-        },
-        events: {
-          click: function (event) {
-            if (noteView.state === 'default') {
-              noteView.stateTransition('edit');
-            }
-          },
-          keydown: function (event) {
-            if (noteView.state === 'edit') {
-              if (event.which != 13) { return; }
-              var value = noteView.container.querySelector('[data-bind]').value;
-              noteView.model.set({text: value});
-              noteView.stateTransition('default');
-            }
-          }
-        }
-      });
+      var noteView = new NoteView(note);
 
       notesList.appendChild(noteView.container);
       window.note = note;

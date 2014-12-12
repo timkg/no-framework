@@ -11,13 +11,6 @@ describe('staticView', function () {
   });
 
   describe('staticView instance', function () {
-    it('returns html string on render', function () {
-      var templateString = '<div><h1>{{header}}</h1><p>{{text}}</p></div>';
-      var view = new StaticView(templateString);
-      var rendered = view.render();
-      assert(templateString === rendered);
-    });
-
     it('replaces data with placeholders on render', function () {
       var templateString = '<div><h1>{{header}}</h1><p>{{text}}</p></div>';
       var view = new StaticView(templateString);
