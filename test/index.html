@@ -84,12 +84,11 @@
       localStorage: nf.LocalStorageStore()
     });
     var Note = nf.Model('Note', repo, 'localStorage');
-    var Source = nf.Model('Source', repo, 'localStorage');
     var NoteCollection = nf.Collection(Note);
-    var SourceCollection = nf.Collection(Source);
 
-    var notesForm = document.querySelector('#form-add-note');
     var notesList = document.querySelector('#list-note');
+    var notesForm = document.querySelector('#form-add-note');
+
     notesForm.addEventListener('submit', function (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -97,6 +96,37 @@
       event.currentTarget[0].value = '';
     }, false);
 
+    function newNoteCreated (text) {
+      var note = new Note({attributes: {text: text}});
+      note.save();
+      var noteView = new nf.ModelView(note, {
+        start: '{{text}}',
+        edit: '<input type="text" data-bind="text" value="{{text}}" />'
+      });
+      var noteViewContainer = document.createElement('li');
+      noteViewContainer.addEventListener('click', function (event) {
+        if (noteView.state === 'start') {
+          noteView.stateTransition('edit');
+        }
+      });
+      noteViewContainer.addEventListener('keydown', function (event) {
+        if (event.which != 13) { return; }
+        if (noteView.state === 'edit') {
+          var attr = noteViewContainer.querySelector('[data-bind]').dataset.bind;
+          var value = noteViewContainer.querySelector('[data-bind]').value;
+          noteView.model.set({text: value});
+          noteView.stateTransition('start');
+        }
+      });
+
+      notesList.appendChild(noteViewContainer);
+      nf.bindViewToDom(noteView, noteViewContainer);
+      window.note = note;
+    }
+
+    /*
+    var Source = nf.Model('Source', repo, 'localStorage');
+    var SourceCollection = nf.Collection(Source);
     var sourcesForm = document.querySelector('#form-add-source');
     var sourcesList = document.querySelector('#list-source');
     sourcesList.addEventListener('click', function (event) {
@@ -117,10 +147,9 @@
       event.currentTarget[0].value = '';
     }, false);
 
-    function newNoteCreated (text) {}
-    function newSourceCreated (text) {}
 
-    var sourceListCollection = new SourceCollection();
+    function newSourceCreated (text) {}
+*/
   </script>
 </div>
 </body>

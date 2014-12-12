@@ -1191,7 +1191,7 @@ function defineModel (modelName, repo, saveIn) {
     set: function (newAttrs) {
       this.attributes = extend(this.attributes, newAttrs);
       this.dirty = true;
-      this.emit('change');
+      this.emit('change', newAttrs);
     },
     get: function (attrName) {
       return this.attributes[attrName];
@@ -1220,7 +1220,10 @@ function defineModel (modelName, repo, saveIn) {
     return repo.find(modelName, id);
   };
 
-  repo.register(modelName, Model, saveIn);
+  if (repo && saveIn) {
+    repo.register(modelName, Model, saveIn);
+  }
+
   return Model;
 }
 
@@ -1315,19 +1318,19 @@ module.exports = createQueue;
 
 },{"../observable/eventEmitter":6,"es6-promise":2}],9:[function(require,module,exports){
 function get (modelName) {
-  return JSON.parse(localStorage.get(modelName)) || [];
+  return JSON.parse(window.localStorage.getItem(modelName)) || [];
 }
 
 function set (modelName, models) {
-  localStorage.set(modelName, JSON.stringify(models));
+  window.localStorage.setItem(modelName, JSON.stringify(models));
 }
 
 function createLocalStorageStore () {
   var localStorageStore = {
     save: function (modelName, model) {
       var models = get(modelName);
-      model.id = models.length;
-      models.push(model);
+      model.id = (typeof model.id === 'number' ? model.id : models.length);
+      models[model.id] = model;
       set(modelName, models);
       return model;
     },
@@ -1445,29 +1448,100 @@ function createRepo (storesMap) {
 module.exports = createRepo;
 
 },{}],12:[function(require,module,exports){
-module.exports = function (templateString) {
+var wrap = require('./../observable/wrapMethod');
+
+function bindViewToDom (view, container) {
+  container.innerHTML = view.html;
+  wrap(view, 'render', function (html) {
+    container.innerHTML = html;
+  })
+}
+
+module.exports = bindViewToDom;
+
+},{"./../observable/wrapMethod":7}],13:[function(require,module,exports){
+
+},{}],14:[function(require,module,exports){
+var Template = require('./template');
+var StaticView = require('./staticView');
+var extend = require('extend');
+var wrap = require('./../observable/wrapMethod');
+
+function createModelView (model, templateString) {
+  var modelView = Object.create(new StaticView());
+  modelView.model = model;
+  modelView.templateString = templateString;
+  if (typeof modelView.templateString === 'object') {
+    modelView.state = 'start';
+    modelView.render = function (data) {
+      var render = Template(modelView.templateString[modelView.state]);
+      modelView.html = render(data);
+      return modelView.html;
+    };
+    modelView.stateTransition = function (newState) {
+      modelView.state = newState;
+      modelView.render(modelView.model.attributes);
+    };
+  }
+
+  model.on('change', function () {
+    modelView.render(modelView.model.attributes);
+  });
+
+  modelView.render(modelView.model.attributes);
+  return modelView
+}
+
+module.exports = createModelView;
+
+},{"./../observable/wrapMethod":7,"./staticView":15,"./template":16,"extend":3}],15:[function(require,module,exports){
+var Template = require('./template');
+
+function createStaticView (templateString) {
+  var staticView = {
+    templateString: templateString,
+    render: function (data) {
+      this.template = this.template || new Template(this.templateString);
+      this.html = this.template(data);
+      return this.html;
+    }
+  };
+
+  return staticView;
+}
+
+
+module.exports = createStaticView;
+},{"./template":16}],16:[function(require,module,exports){
+function createTemplate (templateString) {
   return function (data) {
-    this.html = templateString;
+    var html = templateString;
     for(var prop in data) {
       var regexString = '{{' + prop + '}}';
-      this.html = this.html.replace(new RegExp(regexString, 'ig'), data[prop]);
+      html = html.replace(new RegExp(regexString, 'ig'), data[prop]);
     }
 
-    return this.html;
+    return html;
   }
-};
+}
+
+module.exports = createTemplate;
 
 },{}],"nf":[function(require,module,exports){
 module.exports = {
   Model: require('./model/model'),
   Collection: require('./model/collection'),
-  Template: require('./templating/templating'),
   EventEmitter: require('./observable/eventEmitter'),
   Queue: require('./queue/queue'),
   Repository: require('./repository/repository'),
   MemoryStore: require('./repository/memoryStore'),
   LocalStorageStore: require('./repository/localStorageStore'),
+  Template: require('./view/template'),
+  StaticView: require('./view/staticView'),
+  ModelView: require('./view/modelView'),
+  CollectionView: require('./view/collectionView'),
+  bindViewToDom: require('./view/bindViewToDom'),
   wrapMethod: require('./observable/wrapMethod')
 };
 
-},{"./model/collection":4,"./model/model":5,"./observable/eventEmitter":6,"./observable/wrapMethod":7,"./queue/queue":8,"./repository/localStorageStore":9,"./repository/memoryStore":10,"./repository/repository":11,"./templating/templating":12}]},{},[]);
+},{"./model/collection":4,"./model/model":5,"./observable/eventEmitter":6,"./observable/wrapMethod":7,"./queue/queue":8,"./repository/localStorageStore":9,"./repository/memoryStore":10,"./repository/repository":11,"./view/bindViewToDom":12,"./view/collectionView":13,"./view/modelView":14,"./view/staticView":15,"./view/template":16}]},{},[]);

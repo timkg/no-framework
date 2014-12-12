@@ -1,17 +1,17 @@
 function get (modelName) {
-  return JSON.parse(localStorage.get(modelName)) || [];
+  return JSON.parse(window.localStorage.getItem(modelName)) || [];
 }
 
 function set (modelName, models) {
-  localStorage.set(modelName, JSON.stringify(models));
+  window.localStorage.setItem(modelName, JSON.stringify(models));
 }
 
 function createLocalStorageStore () {
   var localStorageStore = {
     save: function (modelName, model) {
       var models = get(modelName);
-      model.id = models.length;
-      models.push(model);
+      model.id = (typeof model.id === 'number' ? model.id : models.length);
+      models[model.id] = model;
       set(modelName, models);
       return model;
     },
