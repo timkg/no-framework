@@ -99,28 +99,33 @@
     function newNoteCreated (text) {
       var note = new Note({attributes: {text: text}});
       note.save();
+
       var noteView = new nf.ModelView(note, {
-        start: '{{text}}',
-        edit: '<input type="text" data-bind="text" value="{{text}}" />'
-      });
-      var noteViewContainer = document.createElement('li');
-      noteViewContainer.addEventListener('click', function (event) {
-        if (noteView.state === 'start') {
-          noteView.stateTransition('edit');
-        }
-      });
-      noteViewContainer.addEventListener('keydown', function (event) {
-        if (event.which != 13) { return; }
-        if (noteView.state === 'edit') {
-          var attr = noteViewContainer.querySelector('[data-bind]').dataset.bind;
-          var value = noteViewContainer.querySelector('[data-bind]').value;
-          noteView.model.set({text: value});
-          noteView.stateTransition('start');
+        container: function () {
+          return document.createElement('li');
+        },
+        render: {
+          default: '{{text}}',
+          edit: '<input type="text" data-bind="text" value="{{text}}" />'
+        },
+        events: {
+          click: function (event) {
+            if (noteView.state === 'default') {
+              noteView.stateTransition('edit');
+            }
+          },
+          keydown: function (event) {
+            if (noteView.state === 'edit') {
+              if (event.which != 13) { return; }
+              var value = noteView.container.querySelector('[data-bind]').value;
+              noteView.model.set({text: value});
+              noteView.stateTransition('default');
+            }
+          }
         }
       });
 
-      notesList.appendChild(noteViewContainer);
-      nf.bindViewToDom(noteView, noteViewContainer);
+      notesList.appendChild(noteView.container);
       window.note = note;
     }
 
